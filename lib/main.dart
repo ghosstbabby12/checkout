@@ -1,35 +1,29 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
-import 'services/database_service.dart';
-import 'utils/logger.dart';
 import 'screens/products_screen.dart';
+import 'screens/cart_screen.dart';
+import 'screens/payment_screen.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize structured logging for development/devtools.
-  initLogging();
-
-  final db = DatabaseService();
-  await db.seedProducts();
-
-  // If a user already exists in the database, skip the login screen so
-  // developers can get straight to the products list during testing.
-  final users = await db.getUsers();
-  final startAtProducts = users.isNotEmpty;
-
-  runApp(MyApp(startAtProducts: startAtProducts));
+void main() {
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final bool startAtProducts;
-  const MyApp({super.key, this.startAtProducts = false});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: startAtProducts ? const ProductsScreen() : const LoginScreen(),
+      title: 'Checkout App',
+      theme: ThemeData(useMaterial3: false, primarySwatch: Colors.indigo),
+      initialRoute: '/',
+      routes: {
+        '/': (_) => const LoginScreen(),
+        '/products': (_) => const ProductsScreen(),
+        '/cart': (_) => const CartScreen(),
+        '/payment': (_) => const PaymentScreen(),
+      },
     );
   }
 }
