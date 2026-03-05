@@ -8,7 +8,7 @@ class Product {
     this.id,
     required this.name,
     required this.price,
-    this.image = '',
+    required this.image,
   });
 
   Map<String, dynamic> toMap() {
@@ -16,32 +16,11 @@ class Product {
   }
 
   factory Product.fromMap(Map<String, dynamic> map) {
-    // Robust parsing with defaults and type conversions to avoid runtime errors
-    final dynamic rawId = map['id'];
-    final dynamic rawName = map['name'];
-    final dynamic rawPrice = map['price'];
-    final dynamic rawImage = map['image'];
-
-    final int? id = rawId is int ? rawId : (rawId is String ? int.tryParse(rawId) : null);
-    final String name = rawName?.toString() ?? '';
-    double price;
-    if (rawPrice is int) {
-      price = rawPrice.toDouble();
-    } else if (rawPrice is double) {
-      price = rawPrice;
-    } else if (rawPrice is String) {
-      price = double.tryParse(rawPrice) ?? 0.0;
-    } else {
-      price = 0.0;
-    }
-
-    final String image = rawImage?.toString() ?? '';
-
     return Product(
-      id: id,
-      name: name,
-      price: price,
-      image: image,
+      id: map['id'],
+      name: map['name'],
+      price: map['price'],
+      image: map['image'],
     );
   }
 }

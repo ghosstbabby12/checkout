@@ -38,17 +38,21 @@ class _CartScreenState extends State<CartScreen> {
               itemBuilder: (context, index) {
                 final it = _items[index];
                 return ListTile(
-                  leading: it['image'] != null && it['image'].toString().isNotEmpty
+                  leading:
+                      it['image'] != null && it['image'].toString().isNotEmpty
                       ? Image.network(
                           it['image'],
                           width: 56,
                           height: 56,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.image),
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.image),
                         )
                       : const Icon(Icons.image_not_supported_outlined),
                   title: Text(it['name'] ?? ''),
-                  subtitle: Text('\$${(it['price'] ?? 0).toString()} x ${it['quantity']}'),
+                  subtitle: Text(
+                    '\$${(it['price'] ?? 0).toString()} x ${it['quantity']}',
+                  ),
                 );
               },
             ),

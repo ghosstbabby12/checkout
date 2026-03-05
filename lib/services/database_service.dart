@@ -17,27 +17,24 @@ class DatabaseService {
     return _database!;
   }
 
+  // ==============================
+  // INIT DATABASE
+  // ==============================
+
   Future<Database> _initDB() async {
     final path = join(await getDatabasesPath(), 'checkout.db');
 
-    // bump DB version to 2 and provide onUpgrade to add missing columns
     return await openDatabase(
       path,
-      version: 2,
+      version: 2, // 🔥 IMPORTANTE subir versión
       onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        await db.execute('DROP TABLE IF EXISTS users');
+        await db.execute('DROP TABLE IF EXISTS products');
+        await db.execute('DROP TABLE IF EXISTS cart');
+        await _onCreate(db, newVersion);
+      },
     );
-  }
-
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // If upgrading from version 1 -> 2, add the `image` column to products table if missing.
-    if (oldVersion < 2) {
-      try {
-        await db.execute("ALTER TABLE products ADD COLUMN image TEXT DEFAULT ''");
-      } catch (e) {
-        // ignore if column already exists or other issue; safe to continue
-      }
-    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -67,9 +64,9 @@ class DatabaseService {
     ''');
   }
 
-  // =========================
+  // ==============================
   // USERS
-  // =========================
+  // ==============================
 
   Future<int> insertUser(UserModel user) async {
     final db = await database;
@@ -79,43 +76,13 @@ class DatabaseService {
   Future<List<UserModel>> getUsers() async {
     final db = await database;
     final maps = await db.query('users');
-
     return maps.map((e) => UserModel.fromMap(e)).toList();
   }
 
-  // =========================
+  // ==============================
   // PRODUCTS
-  // =========================
+  // ==============================
 
-  Future<int> insertProduct(Product product) async {
-    final db = await database;
-    return await db.insert('products', product.toMap());
-  }
-
-  Future<List<Product>> getProducts() async {
-    final db = await database;
-    final maps = await db.query('products');
-
-    // Debug logging to help diagnose empty results
-    try {
-      print('DatabaseService.getProducts: fetched ${maps.length} rows from products');
-    } catch (_) {}
-
-    return maps.map((e) => Product.fromMap(e)).toList();
-  }
-
-  Future<Product?> getProductById(int id) async {
-    final db = await database;
-    final maps = await db.query('products', where: 'id = ?', whereArgs: [id]);
-
-    if (maps.isNotEmpty) {
-      return Product.fromMap(maps.first);
-    }
-
-    return null; // 🔥 ahora sí retorna algo siempre
-  }
-
-  // Seed products if table is empty
   Future<void> seedProducts() async {
     final db = await database;
 
@@ -123,37 +90,38 @@ class DatabaseService {
       await db.rawQuery('SELECT COUNT(*) FROM products'),
     );
 
-    try {
-      print('DatabaseService.seedProducts: products count = $count');
-    } catch (_) {}
-
     if (count == 0) {
       await db.insert('products', {
         'name': 'Nike Air Max',
         'price': 120.0,
-        'image': 'https://static.nike.com/a/images/t_default/air-max.jpg'
+        'image': 'https://static.nike.com/a/images/t_default/8e6d1a6f-1.jpg',
       });
 
       await db.insert('products', {
         'name': 'Adidas Ultraboost',
         'price': 150.0,
-        'image': 'https://assets.adidas.com/images/ultraboost.jpg'
+        'image':
+            'https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/ultraboost.jpg',
       });
 
       await db.insert('products', {
         'name': 'Puma Runner',
         'price': 95.0,
-        'image': 'https://images.puma.com/runner.jpg'
+        'image':
+            'https://images.puma.com/image/upload/f_auto,q_auto,b_rgb:fafafa/global/runner.jpg',
       });
-      try {
-        print('DatabaseService.seedProducts: inserted sample products');
-      } catch (_) {}
     }
   }
 
-  // =========================
+  Future<List<Product>> getProducts() async {
+    final db = await database;
+    final maps = await db.query('products');
+    return maps.map((e) => Product.fromMap(e)).toList();
+  }
+
+  // ==============================
   // CART
-  // =========================
+  // ==============================
 
   Future<int> addToCart(int productId, int quantity) async {
     final db = await database;
@@ -177,10 +145,5 @@ class DatabaseService {
   Future<void> clearCart() async {
     final db = await database;
     await db.delete('cart');
-  }
-
-  Future<void> close() async {
-    final db = await database;
-    await db.close();
   }
 }

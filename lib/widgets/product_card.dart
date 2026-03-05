@@ -6,7 +6,7 @@ class ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onAdd;
 
-  const ProductCard({required this.product, required this.onAdd});
+  const ProductCard({super.key, required this.product, required this.onAdd});
 
   @override
   Widget build(BuildContext context) {
